@@ -50,8 +50,8 @@ module OriginalAccessor
         @original_accessor_hash[name] = val
 
         if val.is_a?(TrueClass) || val.is_a?(FalseClass)
-          def self.hoge? # TODO 修正
-            @original_accessor_hash[:hoge]
+          self.define_singleton_method "#{name}?" do
+            @original_accessor_hash&.[](name)
           end
         end
       end
