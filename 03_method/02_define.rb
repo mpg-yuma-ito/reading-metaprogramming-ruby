@@ -20,10 +20,11 @@ class A2
   def initialize(array)
     # オブジェクトの特異クラスにメソッドを定義する
     array.each do |val|
-      define_singleton_method "hoge_#{val}" do |num|
+      val_with_prefix = "hoge_#{val}"
+      define_singleton_method val_with_prefix.to_sym do |num|
         return dev_team if num.nil?
 
-        "hoge_#{val}" * num
+        val_with_prefix * num
       end
     end
   end
