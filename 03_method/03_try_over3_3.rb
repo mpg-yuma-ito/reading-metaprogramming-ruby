@@ -94,7 +94,7 @@ class TryOver3::A4
     end
 
     def const_missing(const_name)
-      return super unless @runners.include?(const_name)
+      return super unless @runners&.include?(const_name)
 
       Class.new do
         define_singleton_method :run do # defではなくdefine_singleton_methodならクロージャを作るのでローカル変数を参照できる
