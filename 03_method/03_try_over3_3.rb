@@ -5,7 +5,27 @@ TryOver3 = Module.new
 # - `test_` から始まるインスタンスメソッドが実行された場合、このクラスは `run_test` メソッドを実行する
 # - `test_` メソッドがこのクラスに実装されていなくても `test_` から始まるメッセージに応答することができる
 # - TryOver3::A1 には `test_` から始まるインスタンスメソッドが定義されていない
+class TryOver3::A1
+  def run_test
+    nil
+  end
 
+  def method_missing(name)
+    return run_test if start_with_test?(name.to_s)
+
+    super
+  end
+
+  def respond_to_missing?(symbol, *args)
+    start_with_test?(symbol) || super
+  end
+
+  private
+
+  def start_with_test?(str)
+    str.start_with?('test_')
+  end
+end
 
 # Q2
 # 以下要件を満たす TryOver3::A2Proxy クラスを作成してください。
@@ -18,6 +38,21 @@ class TryOver3::A2
   end
 end
 
+class TryOver3::A2Proxy
+  def initialize(source)
+    @source = source
+  end
+
+  def method_missing(name, *args)
+    return super unless @source.respond_to? name
+
+    @source.send(name, *args)
+  end
+
+  def respond_to_missing?(symbol, *args)
+    @source.respond_to?(symbol) || super
+  end
+end
 
 # Q3.
 # 02_define.rbのQ3ではOriginalAccessor の my_attr_accessor で定義した getter/setter に
@@ -37,6 +72,8 @@ module TryOver3::OriginalAccessor2
           self.class.define_method "#{attr_sym}?" do
             @attr == true
           end
+        elsif respond_to?(:hoge?)
+          self.class.remove_method :hoge?
         end
         @attr = value
       end
@@ -44,14 +81,29 @@ module TryOver3::OriginalAccessor2
   end
 end
 
-
 # Q4
 # 以下のように実行できる TryOver3::A4 クラスを作成してください。
 # TryOver3::A4.runners = [:Hoge]
 # TryOver3::A4::Hoge.run
 # # => "run Hoge"
 # このとき、TryOver3::A4::Hogeという定数は定義されません。
+class TryOver3::A4
+  class << self
+    def runners=(names)
+      @runners = names
+    end
 
+    def const_missing(const_name)
+      return super unless @runners.include?(const_name)
+
+      Class.new do
+        define_singleton_method :run do # defではなくdefine_singleton_methodならクロージャを作るのでローカル変数を参照できる
+          "run #{const_name}"
+        end
+      end
+    end
+  end
+end
 
 # Q5. チャレンジ問題！ 挑戦する方はテストの skip を外して挑戦してみてください。
 #
@@ -67,7 +119,7 @@ module TryOver3::TaskHelper
           block_return
         end
       end
-      new_klass_name = name.to_s.split("_").map{ |w| w[0] = w[0].upcase; w }.join
+      new_klass_name = name.to_s.split("_").map { |w| w[0] = w[0].upcase; w }.join
       const_set(new_klass_name, new_klass)
     end
   end
@@ -81,6 +133,7 @@ class TryOver3::A5Task
     "foo"
   end
 end
+
 # irb(main):001:0> TryOver3::A3Task::Foo.run
 # start 2020-01-07 18:03:10 +0900
 # finish 2020-01-07 18:03:10 +0900
