@@ -40,8 +40,11 @@ end
 # - my_attr_accessorはgetter/setterに加えて、boolean値を代入した際のみ真偽値判定を行うaccessorと同名の?メソッドができること
 module OriginalAccessor
   def self.included(klass)
+    klass.extend ClassMethods
+  end
 
-    def klass.my_attr_accessor(name)
+  module ClassMethods
+    def my_attr_accessor(name)
       define_method name do
         @original_accessor_hash&.[](name)
       end
