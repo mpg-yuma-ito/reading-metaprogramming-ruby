@@ -120,10 +120,12 @@ module TryOver3::TaskHelper
     end
 
     klass.define_singleton_method :const_missing do |const_name|
+      called_method_name = const_name.downcase
+      return super(const_name) unless respond_to?(called_method_name)
+
       Class.new do
         define_singleton_method :run do
           warn "Warning: #{klass}::#{const_name}.#{__method__.to_s} is deprecated"
-          called_method_name = const_name.downcase
           klass.send(called_method_name.to_sym)
         end
       end
