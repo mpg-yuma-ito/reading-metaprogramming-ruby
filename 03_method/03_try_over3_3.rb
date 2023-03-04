@@ -111,16 +111,22 @@ end
 module TryOver3::TaskHelper
   def self.included(klass)
     klass.define_singleton_method :task do |name, &task_block|
-      new_klass = Class.new do
+      define_singleton_method name.to_sym do
+        puts "start #{Time.now}"
+        block_return = task_block.call
+        puts "finish #{Time.now}"
+        block_return
+      end
+    end
+
+    klass.define_singleton_method :const_missing do |const_name|
+      Class.new do
         define_singleton_method :run do
-          puts "start #{Time.now}"
-          block_return = task_block.call
-          puts "finish #{Time.now}"
-          block_return
+          warn "Warning: #{klass}::#{const_name}.#{__method__.to_s} is deprecated"
+          called_method_name = const_name.downcase
+          klass.send(called_method_name.to_sym)
         end
       end
-      new_klass_name = name.to_s.split("_").map { |w| w[0] = w[0].upcase; w }.join
-      const_set(new_klass_name, new_klass)
     end
   end
 end
