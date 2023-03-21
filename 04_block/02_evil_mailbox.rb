@@ -21,11 +21,14 @@
 class EvilMailbox
   def initialize(obj, secret_str = nil)
     @obj = obj
-    @obj.auth(secret_str) unless secret_str.nil?
+    unless secret_str.nil?
+      @obj.auth(secret_str)
+      @secret = lambda { secret_str } # lambdaとして保存するのはあり？
+    end
   end
 
   def send_mail(from, body)
-    result = @obj.send :send_mail, from, body
+    result = @obj.send :send_mail, from, "#{body}#{@secret&.call}"
     yield(result) if block_given?
 
     nil
