@@ -113,7 +113,7 @@ end
 
 toplevellocal = 'hi'
 
-MyGreeting.class_eval do
+MyGreeting.class_eval do # toplevellocal変数にアクセスしたいのでクロージャーであるブロックを使えるように`class_eval`を使う
   define_method :say do
     toplevellocal
   end
