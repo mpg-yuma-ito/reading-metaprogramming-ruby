@@ -8,11 +8,26 @@ end
 e1 = ExClass.new
 e2 = ExClass.new
 
+# define_singleton_methodを使う方法
+e2.define_singleton_method(:hello) { p 'hello' }
+
+# class << obj を使う方法
+# class << e2
+#   def hello
+#     p 'hello'
+#   end
+# end
+
+# def obj.を使う方法
+# def e2.hello
+#   p 'hello'
+# end
+
 Judgement.call(e1, e2)
 
 # 2. ExClassを継承したクラスを作成してください。ただし、そのクラスは定数がない無名のクラスだとします。
 #    その無名クラスをそのままJudgement2.call の引数として渡してください(Judgement2.callはテスト側で定義するので実装は不要です)
-
+Judgement2.call(Class.new(ExClass))
 
 # 3. 下のMetaClassに対し、次のように`meta_`というプレフィックスが属性名に自動でつき、ゲッターの戻り値の文字列にも'meta 'が自動でつく
 #    attr_accessorのようなメソッドであるmeta_attr_accessorを作ってください。セッターに文字列以外の引数がくることは考えないとします。
@@ -28,6 +43,15 @@ Judgement.call(e1, e2)
 #    meta.meta_hello #=> 'meta world'
 
 class MetaClass
+  def self.meta_attr_accessor(method_name)
+    define_method "meta_#{method_name}=" do |str|
+      @str = str
+    end
+
+    define_method "meta_#{method_name}" do
+      "meta #{@str}"
+    end
+  end
 end
 
 # 4. 次のようなExConfigクラスを作成してください。ただし、グローバル変数、クラス変数は使わないものとします。
@@ -39,8 +63,28 @@ end
 #    ex.config = 'world'
 #    ExConfig.config #=> 'world'
 
-
 class ExConfig
+  class << self
+    def config=(config)
+      @config = config
+    end
+
+    def config
+      @config
+    end
+  end
+
+  def config
+    self.class.class_eval do
+      @config
+    end
+  end
+
+  def config=(config)
+    self.class.class_eval do
+      @config = config
+    end
+  end
 end
 
 # 5.
@@ -50,6 +94,14 @@ end
 #
 
 class ExOver
+  def hello_wrapper
+    self.before
+    self.original_hello
+    self.after
+  end
+
+  alias_method :original_hello, :hello
+  alias_method :hello, :hello_wrapper
 end
 
 # 6. 次の toplevellocal ローカル変数の中身を返す MyGreeting#say を実装してみてください。
@@ -60,3 +112,9 @@ class MyGreeting
 end
 
 toplevellocal = 'hi'
+
+MyGreeting.class_eval do
+  define_method :say do
+    toplevellocal
+  end
+end
