@@ -76,13 +76,13 @@ class ExConfig
 
   def config
     self.class.class_eval do
-      @config
+      self.config
     end
   end
 
   def config=(config)
     self.class.class_eval do
-      @config = config
+      self.config = config
     end
   end
 end
